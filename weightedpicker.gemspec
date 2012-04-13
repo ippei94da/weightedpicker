@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "weightedpicker"
-  s.version = ""
+  s.version = "0.0.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["ippei94da"]
@@ -24,9 +24,11 @@ Gem::Specification.new do |s|
     "LICENSE.txt",
     "README.rdoc",
     "Rakefile",
+    "VERSION",
     "lib/weightedpicker.rb",
     "spec/spec_helper.rb",
-    "spec/weightedpicker_spec.rb"
+    "spec/weightedpicker_spec.rb",
+    "weightedpicker.gemspec"
   ]
   s.homepage = "http://github.com/ippei94da/weightedpicker"
   s.licenses = ["MIT"]
