@@ -17,7 +17,7 @@ Jeweler::Tasks.new do |gem|
   gem.name = "weightedpicker"
   gem.homepage = "http://github.com/ippei94da/weightedpicker"
   gem.license = "MIT"
-  gem.summary = %Q{Picking one item from list with weight}
+  gem.summary = %Q{Picking one item from list at the rate of its weight.}
   gem.description = %Q{This library enable to pick out items with their weight.
     Weight data is storaged as a YAML file.
     You can use this library for music player, wallpaper changer, language training.
