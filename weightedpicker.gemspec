@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["ippei94da"]
   s.date = "2012-04-13"
-  s.description = "TODO: longer description of your gem"
+  s.description = "This library enable to pick out items with their weight.\n    Weight data is storaged as a YAML file.\n    You can use this library for music player, wallpaper changer, language training.\n  "
   s.email = "ippei94da@gmail.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
@@ -34,7 +34,7 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.21"
-  s.summary = "TODO: Weight"
+  s.summary = "Picking one item from list with weight"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
