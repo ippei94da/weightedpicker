@@ -17,7 +17,7 @@ Jeweler::Tasks.new do |gem|
   gem.name = "weightedpicker"
   gem.homepage = "http://github.com/ippei94da/weightedpicker"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
+  gem.summary = %Q{TODO: Weight}
   gem.description = %Q{TODO: longer description of your gem}
   gem.email = "ippei94da@gmail.com"
   gem.authors = ["ippei94da"]
