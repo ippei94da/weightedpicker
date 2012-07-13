@@ -117,7 +117,7 @@ class WeightedPicker
     @weights = YAML.load_file(file)
 
     @weights.values.each do |i|
-      raise InvalidWeightError, "#{i.inspect}" unless i.is_a? Integer
+      raise InvalidWeightError, "#{i.inspect}, not integer." unless i.is_a? Integer
     end
 
     merge(items)
