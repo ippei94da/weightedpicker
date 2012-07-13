@@ -206,12 +206,7 @@ class WeightedPicker
     old_max = @weights.values.max
     @weights.each do |key, val|
       new_val = (val.to_f * (MAX_WEIGHT.to_f / old_max.to_f)).to_i
-      if new_val <= MIN_WEIGHT # 0 or 1
-        # do nothing
-        # @weights[key] = MIN_WEIGHT
-      else
-        @weights[key] = new_val
-      end
+      @weights[key] = new_val if MIN_WEIGHT <= new_val
     end
 
     File.open(@save_file, "w") do |io|

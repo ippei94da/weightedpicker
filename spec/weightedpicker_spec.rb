@@ -258,7 +258,28 @@ describe "Weightedpicker::normalize_write" do
     YAML.load_file(TMP_FILE).should == { "A" => 1_000_000, "B" => 250_000}
   end
 
-  it "should shrink write" do
+  it "should shrink write with 2" do
+    t = Marshal.load(Marshal.dump(@wp01))
+    t.weights = { "A" => 2_000_000, "B" => 2, }
+    t.normalize_write
+    t.weights.should == { "A" => 1_000_000, "B" => 1}
+  end
+
+  it "should shrink write with 1" do
+    t = Marshal.load(Marshal.dump(@wp01))
+    t.weights = { "A" => 2_000_000, "B" => 1, }
+    t.normalize_write
+    t.weights.should == { "A" => 1_000_000, "B" => 1}
+  end
+
+  it "should shrink write with 0" do
+    t = Marshal.load(Marshal.dump(@wp01))
+    t.weights = { "A" => 2_000_000, "B" => 0, }
+    t.normalize_write
+    t.weights.should == { "A" => 1_000_000, "B" => 0}
+  end
+
+  it "should expand write" do
     t = Marshal.load(Marshal.dump(@wp01))
     t.weights = { "A" => 500_000, "B" => 500_000, }
     t.normalize_write
