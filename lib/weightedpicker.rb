@@ -156,7 +156,10 @@ class WeightedPicker
   #重みを軽くする。(優先度が下がる)
   def lighten(item)
     raise NotExistKeyError unless @weights.has_key?(item)
-    @weights[ item ] /= 2
+    #@weights[ item ] /= 2 unless @weights[ item ] == 0
+    @weights.each do |key, val|
+      weigh(key) unless key == item
+    end
     normalize_write
   end
 
@@ -194,31 +197,6 @@ class WeightedPicker
     normalize_write
   end
 
-  # given_val は 0.0〜1.0 の間の実数とする。
-  # 重みと 与えられた given_val が等しい場合は false になる。
-  # これは重み 1.0 が稀に採用されないことがあっても
-  # 重み 0.0 が稀にでも採用されることを嫌ってのこと。
-  def adopt?(item, given_val)
-    raise NotExistKeyError unless @weights.has_key?(item)
-
-    return given_val < (@weights[item])
-  end
-
-  ##データを更新し、整合性を確保する。
-  #def refresh
-  # TODO
-  # raise れいがいめい
-  # "Cannot do refresh because no entry exists." if @weights.size == 0
-
-  # #normalize のために事前設定。
-  # @max_weight = @weights.max{ |a, b| a[1] <=> b[1] }[1]
-  # normalize
-
-  # #normalize したあとのデータに従い、total_weight などを算出。
-  # @total_weight = @weights.values.inject(0){ |sum, i| sum += i }
-  # @max_weight = @weights.max{ |a, b| a[1] <=> b[1] }[1]
-  #end
-
   # 最大値を max とするように規格化する。
   # ただし、weight が MIN_WEIGHT 未満となった項目は
   # MIN_WEIGHT を新しい weight とする。
@@ -228,8 +206,9 @@ class WeightedPicker
     old_max = @weights.values.max
     @weights.each do |key, val|
       new_val = (val.to_f * (MAX_WEIGHT.to_f / old_max.to_f)).to_i
-      if new_val < MIN_WEIGHT
-        @weights[key] = MIN_WEIGHT
+      if new_val <= MIN_WEIGHT # 0 or 1
+        # do nothing
+        # @weights[key] = MIN_WEIGHT
       else
         @weights[key] = new_val
       end

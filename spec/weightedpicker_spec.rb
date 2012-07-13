@@ -4,7 +4,7 @@ require "fileutils"
 
 class WeightedPicker
   attr_accessor :weights
-  public :normalize_write, :adopt?, :merge
+  public :normalize_write, :merge
 end
 
 TMP_FILE = "tmp.yaml"
@@ -238,35 +238,6 @@ describe "Weightedpicker::lighten" do
 
 end
 
-describe "Weightedpicker::adopt" do
-  before do
-    weights = { "A" => 1_000_000, "B" => 500_000, }
-    items = ["A", "B"]
-    File.open(TMP_FILE, "w") { |io| YAML.dump(weights, io) }
-    @wp01 = WeightedPicker.new(TMP_FILE, items)
-    @wp02 = Marshal.load(Marshal.dump(@wp01))
-    @wp02.weights = {}
-    FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
-  end
-
-  it do
-    @wp01.adopt?("A",         0).should be_true
-    @wp01.adopt?("A",   500_000).should be_true
-    @wp01.adopt?("A",   999_999).should be_true
-    @wp01.adopt?("A", 1_000_000).should be_false
-    @wp01.adopt?("B",         0).should be_true
-    @wp01.adopt?("B",   499_000).should be_true
-    @wp01.adopt?("B",   500_000).should be_false
-    @wp01.adopt?("B", 1_000_000).should be_false
-  end
-
-  after do
-    FileUtils.rm TMP_FILE  if File.exist? TMP_FILE
-    FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
-  end
-
-end
-
 describe "Weightedpicker::normalize_write" do
   before do
     weights = { "A" => 1_000_000, "B" => 500_000, }
@@ -306,3 +277,64 @@ describe "Weightedpicker::normalize_write" do
   end
 
 end
+
+describe "include zero weight" do
+  before do
+    weights = { "A" => 1_000_000, "B" => 0, }
+    items = ["A", "B"]
+    File.open(TMP_FILE, "w") { |io| YAML.dump(weights, io) }
+    @wp01 = WeightedPicker.new(TMP_FILE, items)
+    FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
+  end
+
+  it "should not change zero weight." do
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 0 }
+    @wp01.lighten("A")
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 0 }
+    @wp01.weigh("A")
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 0 }
+    @wp01.lighten("B")
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 0 }
+    @wp01.weigh("B")
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 0 }
+  end
+
+  after do
+    FileUtils.rm TMP_FILE  if File.exist? TMP_FILE
+    FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
+  end
+
+end
+
+describe "include one weight" do
+  before do
+    weights = { "A" => 1_000_000, "B" => 1, }
+    items = ["A", "B"]
+    File.open(TMP_FILE, "w") { |io| YAML.dump(weights, io) }
+    @wp01 = WeightedPicker.new(TMP_FILE, items)
+    FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
+  end
+
+  it "should not change zero weight." do
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 1 }
+
+    @wp01.lighten("A")
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 2 }
+
+    @wp01.weigh("A")
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 1 }
+
+    @wp01.lighten("B")
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 1 }
+
+    @wp01.weigh("B")
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 2 }
+  end
+
+  after do
+    FileUtils.rm TMP_FILE  if File.exist? TMP_FILE
+    FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
+  end
+
+end
+
