@@ -1,0 +1,6 @@
+== Master (for 0.0.1)
+  Use integer alternative to float.
+  Add test for 'pick' method.
+
+== Version 0.0.0
+  initiali release.

@@ -1,8 +1,8 @@
 require 'yaml'
 
 # TODO
-# 	initialize.指定したファイル内のデータが WeightedPicker 的に
-# 	解釈できなければ例外。
+#   initialize.指定したファイル内のデータが WeightedPicker 的に
+#   解釈できなければ例外。
 
 #= 概要
 # 要素群の中から、優先度に応じた重み付きランダムで、
@@ -44,12 +44,12 @@ require 'yaml'
 #
 #= 評価の上限と下限
 #== 上限
-# 点数の上限は 1.0。
+# 点数の上限は 1 million。
 # 上限を越える点数の要素が現れたら、
-# それが 1.0 になるように全ての要素の評価を除算して正規化する。
+# それが max valueになるように全ての要素の評価を除算して正規化する。
 #
 #== 下限
-# 点数の下限は 2.0 ** (-500) としておく。
+# 点数の下限は 1 としておく。
 # 下限を下回る点数の要素が現れたら、
 # その要素の点数を下限値に設定する。
 # これが重要になるのはクイズゲームで間違ったときにその問題以外の
@@ -91,143 +91,153 @@ require 'yaml'
 # 
 # ヒストリ関係はこのクラスの外に出した方が良いと判断。
 class WeightedPicker
-	MAX_WEIGHT = 1.0
-	MIN_WEIGHT = 2.0 ** (-500)
+  MAX_WEIGHT = 1_000_000
+  MIN_WEIGHT = 1
 
-	class InvalidFilenameError < Exception; end
-	class NoEntryError         < Exception; end
-	class NotExistKeyError     < Exception; end
+  class InvalidFilenameError < Exception; end
+  class NoEntryError         < Exception; end
+  class NotExistKeyError     < Exception; end
+  class InvalidWeightError   < Exception; end
 
-	# Initialization.
-	# Argument 'file' indicates a strage file name for data
-	# which this class manages.
-	# If the 'file' does not exist, this file is used to data strage.
-	#
-	# Argument 'items' is an array of items to be managed.
-	# Not all the items in the 'file' survive.
-	# A and B in the file and B and C in items,
-	# then B and C is the items which this class manage.
-	# A is discarded from record.
-	def initialize(file, items)
-		@save_file = file
-		unless File.exist? @save_file
-			File.open(@save_file, "w") {|io| YAML.dump({}, io)}
-		end
-		@weights = YAML.load_file(file)
+  # Initialization.
+  # Argument 'file' indicates a strage file name for data
+  # which this class manages.
+  # If the 'file' does not exist, this file is used to data strage.
+  #
+  # Argument 'items' is an array of items to be managed.
+  # Not all the items in the 'file' survive.
+  # A and B in the file and B and C in items,
+  # then B and C is the items which this class manage.
+  # A is discarded from record.
+  def initialize(file, items)
+    @save_file = file
+    unless File.exist? @save_file
+      File.open(@save_file, "w") {|io| YAML.dump({}, io)}
+    end
+    @weights = YAML.load_file(file)
 
-		merge(items)
-		normalize_write
-	end
+    @weights.values.each do |i|
+      raise InvalidWeightError, "#{i.inspect}" unless i.is_a? Integer
+    end
 
-	#乱数を利用して優先度で重み付けして要素を選び、要素を返す。
-	def pick
-		raise NoEntryError if @weights.empty?
+    merge(items)
+    normalize_write
+  end
 
-		##乱数を 2つ生成し、adopt? を呼ぶ。
-		##乱数でどれか1つを選ぶ。
-		##その priority に応じて、確率で採用する。
-		while ( true )
-			item = @weights.keys[ rand( @weights.size ) ]
+  # 乱数を利用して優先度で重み付けして要素を選び、要素を返す。
+  # num is only for test. User should not use this argument.
+  def pick(num = nil)
+    raise NoEntryError if @weights.empty?
 
-			#next if ( ! pick?( item ) )
-			if adopt?( item, rand )
-				return item
-			end
-		end
-	end
+    sums = []
+    keys = []
+    sum = 0
+    @weights.each do |key, weight|
+      keys << key
+      sum += weight
+      sums << sum
+    end
 
-	#重みを重くする。(優先度が上がる)
-	def weigh(item)
-		#pp @weights
-		raise NotExistKeyError unless @weights.has_key?(item)
-		@weights[ item ] *= 2.0
-		normalize_write
-	end
+    num ||= rand(sum)
+    # find index of first excess a number
+    sums.each_with_index do |item, index|
+      return keys[index] if num < item
+    end
+  end
 
-	#重みを軽くする。(優先度が下がる)
-	def lighten( item )
-		raise NotExistKeyError unless @weights.has_key?(item)
-		@weights[ item ] /= 2.0
-		normalize_write
-	end
+  #重みを重くする。(優先度が上がる)
+  def weigh(item)
+    #pp @weights
+    raise NotExistKeyError unless @weights.has_key?(item)
+    @weights[ item ] *= 2
+    normalize_write
+  end
 
-	##管理している要素の数を返す。
-	#def size
-	#	@weights.size
-	#end
+  #重みを軽くする。(優先度が下がる)
+  def lighten(item)
+    raise NotExistKeyError unless @weights.has_key?(item)
+    @weights[ item ] /= 2
+    normalize_write
+  end
 
-	##管理している要素と重みでイテレート。
-	##e.g. ws0.each { |item, weight| p item, weight }
-	##item が管理しているオブジェクト、weight が重み。
-	#def each
-	#	@weights.each do |item, weight|
-	#		yield( item, weight )
-	#	end
-	#end
+  ##管理している要素の数を返す。
+  #def size
+  # @weights.size
+  #end
 
-	private
+  ##管理している要素と重みでイテレート。
+  ##e.g. ws0.each { |item, weight| p item, weight }
+  ##item が管理しているオブジェクト、weight が重み。
+  #def each
+  # @weights.each do |item, weight|
+  #   yield(item, weight)
+  # end
+  #end
 
-	# 引数 keys で示したものと、
-	# 内部的に管理しているデータが整合しているかチェックし、
-	# keys に合わせる。
-	# 追加されたデータは MAX_WEIGHT の重みとなる。
-	# データが削除された場合、それが最大値の可能性があるので
-	# 必ず normalize_write される。
-	def merge(keys)
-		keys.each do |key|
-			@weights[key] = MAX_WEIGHT unless
-				@weights.keys.include?(key)
-		end
-		@weights.each do |key, val|
-			@weights.delete(key) unless keys.include?(key)
-		end
-		normalize_write
-	end
+  private
 
-	# given_val は 0.0〜1.0 の間の実数とする。
-	# 重みと 与えられた given_val が等しい場合は false になる。
-	# これは重み 1.0 が稀に採用されないことがあっても
-	# 重み 0.0 が稀にでも採用されることを嫌ってのこと。
-	def adopt?( item, given_val )
-		raise NotExistKeyError unless @weights.has_key?(item)
+  # 引数 keys で示したものと、
+  # 内部的に管理しているデータが整合しているかチェックし、
+  # keys に合わせる。
+  # 追加されたデータは MAX_WEIGHT の重みとなる。
+  # データが削除された場合、それが最大値の可能性があるので
+  # 必ず normalize_write される。
+  def merge(keys)
+    keys.each do |key|
+      @weights[key] ||= MAX_WEIGHT
+    end
+    @weights.each do |key, val|
+      @weights.delete(key) unless keys.include?(key)
+    end
+    #pp @weights
+    #pp keys
+    normalize_write
+  end
 
-		return given_val < (@weights[item])
-	end
+  # given_val は 0.0〜1.0 の間の実数とする。
+  # 重みと 与えられた given_val が等しい場合は false になる。
+  # これは重み 1.0 が稀に採用されないことがあっても
+  # 重み 0.0 が稀にでも採用されることを嫌ってのこと。
+  def adopt?(item, given_val)
+    raise NotExistKeyError unless @weights.has_key?(item)
 
-	##データを更新し、整合性を確保する。
-	#def refresh
-	#	TODO
-	#	raise れいがいめい
-	#	"Cannot do refresh because no entry exists." if @weights.size == 0
+    return given_val < (@weights[item])
+  end
 
-	#	#normalize のために事前設定。
-	#	@max_weight = @weights.max{ |a, b| a[1] <=> b[1] }[1]
-	#	normalize
+  ##データを更新し、整合性を確保する。
+  #def refresh
+  # TODO
+  # raise れいがいめい
+  # "Cannot do refresh because no entry exists." if @weights.size == 0
 
-	#	#normalize したあとのデータに従い、total_weight などを算出。
-	#	@total_weight = @weights.values.inject( 0 ){ |sum, i| sum += i }
-	#	@max_weight = @weights.max{ |a, b| a[1] <=> b[1] }[1]
-	#end
+  # #normalize のために事前設定。
+  # @max_weight = @weights.max{ |a, b| a[1] <=> b[1] }[1]
+  # normalize
 
-	# 最大値を max とするように規格化する。
-	# ただし、weight が MIN_WEIGHT 未満となった項目は
-	# MIN_WEIGHT を新しい weight とする。
-	def normalize_write
-		raise NoEntryError if @weights.size == 0
+  # #normalize したあとのデータに従い、total_weight などを算出。
+  # @total_weight = @weights.values.inject(0){ |sum, i| sum += i }
+  # @max_weight = @weights.max{ |a, b| a[1] <=> b[1] }[1]
+  #end
 
-		old_max = @weights.values.max
-		@weights.each do |key, val|
-			new_val = (val * (MAX_WEIGHT / old_max ) )
-			if new_val < MIN_WEIGHT
-				@weights[key] = MIN_WEIGHT
-			else
-				@weights[key] = new_val
-			end
-		end
+  # 最大値を max とするように規格化する。
+  # ただし、weight が MIN_WEIGHT 未満となった項目は
+  # MIN_WEIGHT を新しい weight とする。
+  def normalize_write
+    raise NoEntryError if @weights.size == 0
 
-		File.open(@save_file, "w") do |io|
-			YAML.dump(@weights, io)
-		end
-	end
+    old_max = @weights.values.max
+    @weights.each do |key, val|
+      new_val = (val.to_f * (MAX_WEIGHT.to_f / old_max.to_f)).to_i
+      if new_val < MIN_WEIGHT
+        @weights[key] = MIN_WEIGHT
+      else
+        @weights[key] = new_val
+      end
+    end
+
+    File.open(@save_file, "w") do |io|
+      YAML.dump(@weights, io)
+    end
+  end
 
 end

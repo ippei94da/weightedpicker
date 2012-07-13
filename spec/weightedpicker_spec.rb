@@ -14,7 +14,7 @@ NOT_EXIST_FILE = "not_exist_file"
 
 describe "Weightedpicker::initialize" do
   before do
-    weights = { "A" => 1.0, "B" => 0.5, }
+    weights = { "A" => 1_000_000, "B" => 500_000, }
     items = ["A", "B"]
     File.open(TMP_FILE, "w") { |io| YAML.dump(weights, io) }
     @wp01 = WeightedPicker.new(TMP_FILE, items)
@@ -26,8 +26,8 @@ describe "Weightedpicker::initialize" do
   it "should create new file when the file not exist" do
     # 指定したファイルが存在しない場合、
     t = WeightedPicker.new(NOT_EXIST_FILE, ["A","B"])
-    t.weights.should == { "A" => 1.0, "B" => 1.0}
-    YAML.load_file(NOT_EXIST_FILE).should == { "A" => 1.0, "B" => 1.0, }
+    t.weights.should == { "A" => 1_000_000, "B" => 1_000_000}
+    YAML.load_file(NOT_EXIST_FILE).should == { "A" => 1_000_000, "B" => 1_000_000, }
   end
   
   it "should raise exception" do
@@ -37,26 +37,37 @@ describe "Weightedpicker::initialize" do
 
   it "should read correctly" do
     # 正しく取り込めているか？
-    @wp01.weights.should == { "A" => 1.0, "B" => 0.5, }
+    @wp01.weights.should == { "A" => 1_000_000, "B" => 500_000, }
   end
 
   it "should normalize when the maximum in the file not the same as MAX_WEIGHT" do
     # 指定したファイル内の重みの最大値が MAX_WEIGHT と異なれば、
     # 全体を normalize して格納。
-    weights = { "A" => 2.0, "B" => 0.5, }
+    weights = { "A" => 2_000_000, "B" => 500_000, }
     File.open(TMP_FILE, "w") {|io| YAML.dump(weights, io) }
-    WeightedPicker.new(TMP_FILE, ["A","B"]).weights.should == { "A" => 1.0, "B" => 0.25, }
+    WeightedPicker.new(TMP_FILE, ["A","B"]).weights.should == { "A" => 1_000_000, "B" => 250_000, }
     #
-    weights = { "A" => 0.25, "B" => 0.5, }
+    weights = { "A" => 250_000, "B" => 500_000, }
     File.open(TMP_FILE, "w"){ |io| YAML.dump(weights, io) }
-    WeightedPicker.new(TMP_FILE, ["A","B"]).weights.should == { "A" => 0.5, "B" => 1.0, }
+    WeightedPicker.new(TMP_FILE, ["A","B"]).weights.should == { "A" => 500_000, "B" => 1_000_000, }
   end
 
   it "should merge when keys between weights and items" do
-    # weights と items が異なる場合
-    weights = { "A" => 1.0, "B" => 0.50, }
+    # weights と items が異なる場合、
+    # まず新しいキーを重み MAX_WEIGHT で追加して、
+    # それから実際にはないキーを削除。
+    weights = { "A" => 1_000_000, "B" => 500_000, }
     File.open(TMP_FILE, "w") {|io| YAML.dump(weights, io) }
-    WeightedPicker.new(TMP_FILE, ["B","C"]).weights.should == { "B" => 0.5, "C" => 1.0, }
+    #puts "HERE ###################"
+    WeightedPicker.new(TMP_FILE, ["B","C"]).weights.should == { "B" => 500_000, "C" => 1_000_000, }
+  end
+
+  it "should raise exception if include not integer weight." do
+    weights = { "A" => 1.0, "B" => 0.5, }
+    File.open(TMP_FILE, "w") {|io| YAML.dump(weights, io) }
+    lambda{
+      WeightedPicker.new(TMP_FILE, ["A","B"])
+    }.should raise_error(WeightedPicker::InvalidWeightError)
   end
 
   after do
@@ -68,7 +79,7 @@ end
 
 describe "Weightedpicker::merge" do
   before do
-    weights = { "A" => 1.0, "B" => 0.5, }
+    weights = { "A" => 1_000_000, "B" => 500_000, }
     items = ["A", "B"]
     File.open(TMP_FILE, "w") { |io| YAML.dump(weights, io) }
     @wp01 = WeightedPicker.new(TMP_FILE, items)
@@ -84,9 +95,9 @@ describe "Weightedpicker::merge" do
     t = Marshal.load(Marshal.dump(@wp01))
     keys = ["B"]
     t.merge(keys)
-    t.weights. should == { "B" => 1.0 }
+    t.weights. should == { "B" => 1_000_000 }
     # 書き込みチェック
-    YAML.load_file(TMP_FILE).should == { "B" => 1.0 }
+    YAML.load_file(TMP_FILE).should == { "B" => 1_000_000 }
   end
 
   it "when keys given are more than weights file" do
@@ -94,9 +105,9 @@ describe "Weightedpicker::merge" do
     t = Marshal.load(Marshal.dump(@wp01))
     keys = ["A", "B", "C"]
     t.merge(keys)
-    t.weights.should == { "A" => 1.0, "B" => 0.5, "C" => 1.0, }
+    t.weights.should == { "A" => 1_000_000, "B" => 500_000, "C" => 1_000_000, }
     # 書き込みチェック
-    YAML.load_file(TMP_FILE).should == { "A" => 1.0, "B" => 0.5, "C" => 1.0}
+    YAML.load_file(TMP_FILE).should == { "A" => 1_000_000, "B" => 500_000, "C" => 1_000_000}
   end
 
   it "when keys given are the same as weights file" do
@@ -104,9 +115,9 @@ describe "Weightedpicker::merge" do
     # 同じ場合
     keys = ["A", "B"]
     t.merge(keys)
-    t.weights.should == { "A" => 1.0, "B" => 0.5}
+    t.weights.should == { "A" => 1_000_000, "B" => 500_000}
     # 書き込みチェック
-    YAML.load_file(TMP_FILE).should == { "A" => 1.0, "B" => 0.5}
+    YAML.load_file(TMP_FILE).should == { "A" => 1_000_000, "B" => 500_000}
   end
 
   after do
@@ -118,7 +129,7 @@ end
 
 describe "Weightedpicker::pick" do
   before do
-    weights = { "A" => 1.0, "B" => 0.5, }
+    weights = { "A" => 1_000_000, "B" => 500_000, }
     items = ["A", "B"]
     File.open(TMP_FILE, "w") { |io| YAML.dump(weights, io) }
     @wp01 = WeightedPicker.new(TMP_FILE, items)
@@ -130,11 +141,16 @@ describe "Weightedpicker::pick" do
   end
 
   it "should pick" do
-    ## No test, beccause including randomness.
-    #assert_raise(WeightedPicker::NoEntryError){@wp02.pick}
-    #100.times do 
-    #  assert_equal(true, ["A","B"].include?(@wp01.pick))
-    #end
+    lambda{@wp02.pick}.should raise_error(WeightedPicker::NoEntryError)
+
+    sum = 1_500_000
+    tryal = 300
+    results = {"A" => 0, "B" => 0}
+    tryal.times do |i|
+      results[@wp01.pick(i * sum / tryal)] += 1
+    end
+    results["A"].should == tryal / 3 * 2
+    results["B"].should == tryal / 3 * 1
   end
 
   after do
@@ -146,7 +162,7 @@ end
 
 describe "Weightedpicker::weigh" do
   before do
-    weights = { "A" => 1.0, "B" => 0.5, }
+    weights = { "A" => 1_000_000, "B" => 500_000, }
     items = ["A", "B"]
     File.open(TMP_FILE, "w") { |io| YAML.dump(weights, io) }
     @wp01 = WeightedPicker.new(TMP_FILE, items)
@@ -159,17 +175,17 @@ describe "Weightedpicker::weigh" do
   it "should weigh A" do
     t = Marshal.load(Marshal.dump(@wp01))
     t.weigh("A")
-    t.weights.should == { "A" => 1.0, "B" => 0.25 }
+    t.weights.should == { "A" => 1_000_000, "B" => 250_000 }
     # 書き込みチェック
-    YAML.load_file(TMP_FILE).should == { "A" => 1.0, "B" => 0.25 }
+    YAML.load_file(TMP_FILE).should == { "A" => 1_000_000, "B" => 250_000 }
   end
 
   it "should weigh B" do
     t = Marshal.load(Marshal.dump(@wp01))
     t.weigh("B")
-    t.weights.should == { "A" => 1.0, "B" => 1.0 }
+    t.weights.should == { "A" => 1_000_000, "B" => 1_000_000 }
     # 書き込みチェック
-    YAML.load_file(TMP_FILE).should == { "A" => 1.0, "B" => 1.0 }
+    YAML.load_file(TMP_FILE).should == { "A" => 1_000_000, "B" => 1_000_000 }
   end
 
   it "should raise error" do
@@ -185,7 +201,7 @@ end
 
 describe "Weightedpicker::lighten" do
   before do
-    weights = { "A" => 1.0, "B" => 0.5, }
+    weights = { "A" => 1_000_000, "B" => 500_000, }
     items = ["A", "B"]
     File.open(TMP_FILE, "w") { |io| YAML.dump(weights, io) }
     @wp01 = WeightedPicker.new(TMP_FILE, items)
@@ -197,17 +213,17 @@ describe "Weightedpicker::lighten" do
   it "should lighten A" do
     t = Marshal.load(Marshal.dump(@wp01))
     t.lighten("A")
-    t.weights.should == { "A" => 1.0, "B" => 1.0 }
+    t.weights.should == { "A" => 1_000_000, "B" => 1_000_000 }
     # 書き込みチェック
-    YAML.load_file(TMP_FILE).should == { "A" => 1.0, "B" => 1.0 }
+    YAML.load_file(TMP_FILE).should == { "A" => 1_000_000, "B" => 1_000_000 }
   end
 
   it "should lighten B" do
     t = Marshal.load(Marshal.dump(@wp01))
     t.lighten("B")
-    t.weights.should == { "A" => 1.0, "B" => 0.25 }
+    t.weights.should == { "A" => 1_000_000, "B" => 250_000 }
     # 書き込みチェック
-    YAML.load_file(TMP_FILE).should == { "A" => 1.0, "B" => 0.25 }
+    YAML.load_file(TMP_FILE).should == { "A" => 1_000_000, "B" => 250_000 }
   end
 
   it "should raise error" do
@@ -224,7 +240,7 @@ end
 
 describe "Weightedpicker::adopt" do
   before do
-    weights = { "A" => 1.0, "B" => 0.5, }
+    weights = { "A" => 1_000_000, "B" => 500_000, }
     items = ["A", "B"]
     File.open(TMP_FILE, "w") { |io| YAML.dump(weights, io) }
     @wp01 = WeightedPicker.new(TMP_FILE, items)
@@ -234,14 +250,14 @@ describe "Weightedpicker::adopt" do
   end
 
   it do
-    @wp01.adopt?("A", 0.0  ).should be_true
-    @wp01.adopt?("A", 0.5  ).should be_true
-    @wp01.adopt?("A", 0.999).should be_true
-    @wp01.adopt?("A", 1.0  ).should be_false
-    @wp01.adopt?("B", 0.0  ).should be_true
-    @wp01.adopt?("B", 0.499).should be_true
-    @wp01.adopt?("B", 0.5  ).should be_false
-    @wp01.adopt?("B", 1.0  ).should be_false
+    @wp01.adopt?("A",         0).should be_true
+    @wp01.adopt?("A",   500_000).should be_true
+    @wp01.adopt?("A",   999_999).should be_true
+    @wp01.adopt?("A", 1_000_000).should be_false
+    @wp01.adopt?("B",         0).should be_true
+    @wp01.adopt?("B",   499_000).should be_true
+    @wp01.adopt?("B",   500_000).should be_false
+    @wp01.adopt?("B", 1_000_000).should be_false
   end
 
   after do
@@ -253,7 +269,7 @@ end
 
 describe "Weightedpicker::normalize_write" do
   before do
-    weights = { "A" => 1.0, "B" => 0.5, }
+    weights = { "A" => 1_000_000, "B" => 500_000, }
     items = ["A", "B"]
     File.open(TMP_FILE, "w") { |io| YAML.dump(weights, io) }
     @wp01 = WeightedPicker.new(TMP_FILE, items)
@@ -264,20 +280,20 @@ describe "Weightedpicker::normalize_write" do
 
   it "should shrink write" do
     t = Marshal.load(Marshal.dump(@wp01))
-    t.weights = { "A" => 2.0, "B" => 0.5, }
+    t.weights = { "A" => 2_000_000, "B" => 500_000, }
     t.normalize_write
-    t.weights.should == { "A" => 1.0, "B" => 0.25}
+    t.weights.should == { "A" => 1_000_000, "B" => 250_000}
     # 書き込みチェック
-    YAML.load_file(TMP_FILE).should == { "A" => 1.0, "B" => 0.25}
+    YAML.load_file(TMP_FILE).should == { "A" => 1_000_000, "B" => 250_000}
   end
 
   it "should shrink write" do
     t = Marshal.load(Marshal.dump(@wp01))
-    t.weights = { "A" => 0.5, "B" => 0.5, }
+    t.weights = { "A" => 500_000, "B" => 500_000, }
     t.normalize_write
-    t.weights.should == { "A" => 1.0, "B" => 1.00}
+    t.weights.should == { "A" => 1_000_000, "B" => 1_000_000}
     # 書き込みチェック
-    YAML.load_file(TMP_FILE).should == { "A" => 1.0, "B" => 1.00}
+    YAML.load_file(TMP_FILE).should == { "A" => 1_000_000, "B" => 1_000_000}
   end
 
   it "should raise error" do
