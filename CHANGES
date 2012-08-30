@@ -1,3 +1,5 @@
+= weightedpicker changelog
+
 == Master (for 0.0.2)
   Use integer alternative to float.
   Add test for 'pick' method.
