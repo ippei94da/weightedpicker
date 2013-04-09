@@ -91,7 +91,8 @@ require 'yaml'
 # 
 # ヒストリ関係はこのクラスの外に出した方が良いと判断。
 class WeightedPicker
-  MAX_WEIGHT = 2**(16)
+  MAX_WEIGHT = 2**16
+  INI_WEIGHT = 2**8
   MIN_WEIGHT = 1
 
   class InvalidFilenameError < Exception; end
@@ -117,11 +118,11 @@ class WeightedPicker
     @weights = YAML.load_file(file)
 
     @weights.values.each do |i|
+      #pp i
       raise InvalidWeightError, "#{i.inspect}, not integer." unless i.is_a? Integer
     end
 
     merge(items)
-    normalize_write
   end
 
   # 乱数を利用して優先度で重み付けして要素を選び、要素を返す。
@@ -147,20 +148,24 @@ class WeightedPicker
 
   #重みを重くする。(優先度が上がる)
   def weigh(item)
-    #pp @weights
     raise NotExistKeyError unless @weights.has_key?(item)
     @weights[ item ] *= 2
-    normalize_write
+    @weights[ item ] = MAX_WEIGHT if MAX_WEIGHT < @weights[ item ]
   end
 
   #重みを軽くする。(優先度が下がる)
   def lighten(item)
     raise NotExistKeyError unless @weights.has_key?(item)
-    #@weights[ item ] /= 2 unless @weights[ item ] == 0
-    @weights.each do |key, val|
-      weigh(key) unless key == item
+    #@weights.each do |key, val|
+    #  weigh(key) unless key == item
+    #end
+    if @weights[ item ] == 0
+      #@weights[ item ] = 0
+    elsif @weights[ item ] == MIN_WEIGHT
+      @weights[ item ] = MIN_WEIGHT
+    else
+      @weights[ item ] /= 2
     end
-    normalize_write
   end
 
   ##管理している要素の数を返す。
@@ -182,36 +187,33 @@ class WeightedPicker
   # 引数 keys で示したものと、
   # 内部的に管理しているデータが整合しているかチェックし、
   # keys に合わせる。
-  # 追加されたデータは MAX_WEIGHT の重みとなる。
-  # データが削除された場合、それが最大値の可能性があるので
-  # 必ず normalize_write される。
+  # 追加されたデータの重みは、データ内に存在する最大値と
+  # 同じになる。
   def merge(keys)
+    new_weights = {}
+    new_keys = []
+    max = 0
     keys.each do |key|
-      @weights[key] ||= MAX_WEIGHT
-    end
-    @weights.each do |key, val|
-      @weights.delete(key) unless keys.include?(key)
-    end
-    #pp @weights
-    #pp keys
-    normalize_write
-  end
+      new_weights[key] = @weights[key]
 
-  # 最大値を max とするように規格化する。
-  # ただし、weight が MIN_WEIGHT 未満となった項目は
-  # MIN_WEIGHT を新しい weight とする。
-  def normalize_write
-    raise NoEntryError if @weights.size == 0
+      if @weights[key] == nil
+        #substitute max among exist values afterward
+        new_keys << key unless @weights[key]
+        next 
+      end
 
-    old_max = @weights.values.max
-    @weights.each do |key, val|
-      new_val = (val.to_f * (MAX_WEIGHT.to_f / old_max.to_f)).to_i
-      @weights[key] = new_val if MIN_WEIGHT <= new_val
+      new_weights[key] = 0 if new_weights[key] < MIN_WEIGHT
+      new_weights[key] = MAX_WEIGHT if MAX_WEIGHT < new_weights[key]
+
+      max = @weights[key] if max < @weights[key]
     end
 
-    File.open(@save_file, "w") do |io|
-      YAML.dump(@weights, io)
+    max = INI_WEIGHT if max < INI_WEIGHT
+    new_keys.each do |key|
+      new_weights[key] = max
     end
+
+    @weights = new_weights
   end
 
 end
