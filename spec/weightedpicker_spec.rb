@@ -78,12 +78,13 @@ describe "Weightedpicker" do
     end
   end
 
-  describe "pick" do
   #before do
   #  @wp01 = WeightedPicker.load_file(AB_YAML)
   #  @wp00 = WeightedPicker.new({})
   #end
 
+  describe "pick" do
+    srand(0)
     it "should pick" do
       lambda{@wp00.pick}.should raise_error(WeightedPicker::NoEntryError)
 

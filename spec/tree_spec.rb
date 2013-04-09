@@ -7,13 +7,9 @@ class WeightedPicker::Tree
   public :depth
   public :choose
   public :index
+  public :add_ancestors
   attr_reader :weights
 end
-
-#puts rand(100000)
-#puts rand(100000)
-#puts rand(100000)
-#puts rand(100000)
 
 describe "Weightedpicker::Tree" do
   before do
@@ -34,10 +30,10 @@ describe "Weightedpicker::Tree" do
   it "should pick" do
     results = {"A" => 0, "B" => 0, "C" => 0}
     srand(0)
-    300.times do
+    300.times do |i|
       results[@tree00.pick] += 1
     end
-    #pp results #=> {"A"=>152, "B"=>76, "C"=>72}
+    #pp results #=> {"A"=> 52, "B"=>76, "C"=>72}
     results["A"].should be_within(15).of(150)
     results["B"].should be_within( 8).of( 75)
     results["C"].should be_within( 8).of( 75)
@@ -66,6 +62,15 @@ describe "Weightedpicker::Tree" do
     ]
     @tree00.names_weights.should == {"A" => 1, "B" => 1, "C" => 1}
     lambda{ @tree00.lighten("D")}.should raise_error(WeightedPicker::Tree::NoEntryError)
+  end
+
+  it "should add_ancestors" do
+    @tree00.add_ancestors(1,10)
+    @tree00.weights.should == [
+      [14],
+      [13,1],
+      [2,11,1,0],
+    ]
   end
 
   it "should log2_ceil" do

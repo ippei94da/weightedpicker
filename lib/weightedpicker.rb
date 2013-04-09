@@ -131,8 +131,8 @@ class WeightedPicker
 
   # 乱数を利用して優先度で重み付けして要素を選び、要素を返す。
   # num is only for test. User should not use this argument.
-  def pick(num = nil)
-    return @tree.pick
+  def pick
+    @tree.pick
   end
 
   #重みを重くする。(優先度が上がる)

@@ -50,7 +50,7 @@ class WeightedPicker::Tree
     depth.times do |i|
       next_id0 = 2 * current_index
       next_id1 = 2 * current_index + 1
-      puts
+      #puts
       choise = choose( @weights[i+1][next_id0], @weights[i+1][next_id1])
       current_index = 2 * current_index + choise
     end
