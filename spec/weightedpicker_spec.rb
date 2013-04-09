@@ -76,62 +76,61 @@ describe "Weightedpicker::initialize" do
 
 end
 
-#describe "Weightedpicker::merge" do
-#  before do
-#    @wp01 = WeightedPicker.new(AB_YAML, items)
-#
-#    #@wp02 = Marshal.load(Marshal.dump(@wp01))
-#    #@wp02.weights = {}
-#
-#    FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
-#  end
-#
-#  it "when keys given are less than weights file" do
-#    # 少ない場合
-#    t = Marshal.load(Marshal.dump(@wp01))
-#    keys = ["B"]
-#    t.merge(keys)
-#    t.weights. should == { "B" => 256 }
-#    # 書き込みチェック
-#    YAML.load_file(AB_YAML).should == { "B" => 256 }
-#  end
-#
-#  it "when keys given are more than weights file" do
-#    # 多い場合
-#    t = Marshal.load(Marshal.dump(@wp01))
-#    keys = ["A", "B", "C"]
-#    t.merge(keys)
-#    t.weights.should == { "A" => 256, "B" => 128, "C" => 256, }
-#    # 書き込みチェック
-#    YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 128, "C" => 256}
-#  end
-#
-#  it "when keys given are the same as weights file" do
-#    t = Marshal.load(Marshal.dump(@wp01))
-#    # 同じ場合
-#    keys = ["A", "B"]
-#    t.merge(keys)
-#    t.weights.should == { "A" => 256, "B" => 128}
-#    # 書き込みチェック
-#    YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 128}
-#  end
-#
-#  after do
-#    FileUtils.rm AB_YAML  if File.exist? AB_YAML
-#    FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
-#  end
-#
-#end
+describe "Weightedpicker::merge" do
+  before do
+    @wp01 = WeightedPicker.new(AB_YAML, items)
+
+    #@wp02 = Marshal.load(Marshal.dump(@wp01))
+    #@wp02.weights = {}
+
+    FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
+  end
+
+  it "when keys given are less than weights file" do
+    # 少ない場合
+    t = Marshal.load(Marshal.dump(@wp01))
+    keys = ["B"]
+    t.merge(keys)
+    t.weights. should == { "B" => 256 }
+    ## 書き込みチェック
+    #YAML.load_file(AB_YAML).should == { "B" => 256 }
+  end
+
+  it "when keys given are more than weights file" do
+    # 多い場合
+    t = Marshal.load(Marshal.dump(@wp01))
+    keys = ["A", "B", "C"]
+    t.merge(keys)
+    t.weights.should == { "A" => 256, "B" => 128, "C" => 256, }
+    ## 書き込みチェック
+    #YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 128, "C" => 256}
+  end
+
+  it "when keys given are the same as weights file" do
+    t = Marshal.load(Marshal.dump(@wp01))
+    # 同じ場合
+    keys = ["A", "B"]
+    t.merge(keys)
+    t.weights.should == { "A" => 256, "B" => 128}
+    ## 書き込みチェック
+    #YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 128}
+  end
+
+  after do
+    #FileUtils.rm AB_YAML  if File.exist? AB_YAML
+    FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
+  end
+
+end
 
 describe "Weightedpicker::pick" do
   before do
-    weights = { "A" => 256, "B" => 128, }
-    items = ["A", "B"]
-    File.open(AB_YAML, "w") { |io| YAML.dump(weights, io) }
+    #weights = { "A" => 256, "B" => 128, }
+    #items = ["A", "B"]
     @wp01 = WeightedPicker.new(AB_YAML, items)
 
-    @wp02 = Marshal.load(Marshal.dump(@wp01))
-    @wp02.weights = {}
+    #@wp02 = Marshal.load(Marshal.dump(@wp01))
+    #@wp02.weights = {}
 
     FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
   end
@@ -150,7 +149,6 @@ describe "Weightedpicker::pick" do
   end
 
   after do
-    FileUtils.rm AB_YAML  if File.exist? AB_YAML
     FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
   end
 
@@ -158,12 +156,12 @@ end
 
 describe "Weightedpicker::weigh" do
   before do
-    weights = { "A" => 256, "B" => 128, }
-    items = ["A", "B"]
-    File.open(AB_YAML, "w") { |io| YAML.dump(weights, io) }
+    #weights = { "A" => 256, "B" => 128, }
+    #items = ["A", "B"]
+    #File.open(AB_YAML, "w") { |io| YAML.dump(weights, io) }
     @wp01 = WeightedPicker.new(AB_YAML, items)
-    @wp02 = Marshal.load(Marshal.dump(@wp01))
-    @wp02.weights = {}
+    #@wp02 = Marshal.load(Marshal.dump(@wp01))
+    #@wp02.weights = {}
 
     FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
   end
@@ -172,16 +170,16 @@ describe "Weightedpicker::weigh" do
     t = Marshal.load(Marshal.dump(@wp01))
     t.weigh("A")
     t.weights.should == { "A" => 256, "B" => 64 }
-    # 書き込みチェック
-    YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 64 }
+    ## 書き込みチェック
+    #YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 64 }
   end
 
   it "should weigh B" do
     t = Marshal.load(Marshal.dump(@wp01))
     t.weigh("B")
     t.weights.should == { "A" => 256, "B" => 256 }
-    # 書き込みチェック
-    YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 256 }
+    ## 書き込みチェック
+    #YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 256 }
   end
 
   it "should raise error" do
@@ -189,7 +187,6 @@ describe "Weightedpicker::weigh" do
   end
 
   after do
-    FileUtils.rm AB_YAML  if File.exist? AB_YAML
     FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
   end
 
@@ -199,10 +196,10 @@ describe "Weightedpicker::lighten" do
   before do
     weights = { "A" => 256, "B" => 128, }
     items = ["A", "B"]
-    File.open(AB_YAML, "w") { |io| YAML.dump(weights, io) }
+    #File.open(AB_YAML, "w") { |io| YAML.dump(weights, io) }
     @wp01 = WeightedPicker.new(AB_YAML, items)
-    @wp02 = Marshal.load(Marshal.dump(@wp01))
-    @wp02.weights = {}
+    #@wp02 = Marshal.load(Marshal.dump(@wp01))
+    #@wp02.weights = {}
     FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
   end
 
@@ -210,16 +207,16 @@ describe "Weightedpicker::lighten" do
     t = Marshal.load(Marshal.dump(@wp01))
     t.lighten("A")
     t.weights.should == { "A" => 256, "B" => 256 }
-    # 書き込みチェック
-    YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 256 }
+    ## 書き込みチェック
+    #YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 256 }
   end
 
   it "should lighten B" do
     t = Marshal.load(Marshal.dump(@wp01))
     t.lighten("B")
     t.weights.should == { "A" => 256, "B" => 64 }
-    # 書き込みチェック
-    YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 64 }
+    ## 書き込みチェック
+    #YAML.load_file(AB_YAML).should == { "A" => 256, "B" => 64 }
   end
 
   it "should raise error" do
@@ -228,7 +225,7 @@ describe "Weightedpicker::lighten" do
   end
 
   after do
-    FileUtils.rm AB_YAML  if File.exist? AB_YAML
+    #FileUtils.rm AB_YAML  if File.exist? AB_YAML
     FileUtils.rm NOT_EXIST_FILE if File.exist? NOT_EXIST_FILE
   end
 
