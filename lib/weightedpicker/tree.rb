@@ -6,12 +6,12 @@
 #
 class WeightedPicker::Tree
   #
-  def initialize(hash)
-    @size = hash.size #for return hash.
+  def initialize(data)
+    @size = data.size #for return hash.
 
-    @names = hash.keys
+    @names = data.keys
     @weights = []
-    @weights[0] = hash.values
+    @weights[0] = data.values
 
     @size.upto ((2 ** depth) - 1) do |i|
       weights[i] = 0
@@ -29,7 +29,7 @@ class WeightedPicker::Tree
   end
 
   # Return internal data as a Hash.
-  def hash
+  def names_weights
     results = {}
     @size.times do |i|
       results[@names] = @weights[-1]
@@ -46,7 +46,7 @@ class WeightedPicker::Tree
       choise = choose( @weights[i+1][next_id0], @weights[i+1][next_id1], nums.shift)
       current_index = 2 * current_index + choise
     end
-    @weights[-1][current_index]
+    return @names[current_index]
 
     #raise NoEntryError if @weights.empty?
 
@@ -70,13 +70,17 @@ class WeightedPicker::Tree
     #raise NotExistKeyError unless @weights.has_key?(item)
     #@weights[ item ] *= 2
     #@weights[ item ] = MAX_WEIGHT if MAX_WEIGHT < @weights[ item ]
-    index = find(item)
-    depth.times do |i|
-      @weights[i]
-    end
+    id = index(item)
+    weight = @weights[-1][id]
+    half = weight / 2
+    add_ancestors(id, half)
   end
 
   def lighten(item)
+    id = index(item)
+    weight = @weights[-1][id]
+    half = weight / 2
+    add_ancestors(id,  - half)
     #raise NotExistKeyError unless @weights.has_key?(item)
     ##@weights.each do |key, val|
     ##  weigh(key) unless key == item
@@ -91,6 +95,14 @@ class WeightedPicker::Tree
   end
 
   private
+
+  def add_ancestors(id, val)
+    depth.times do |d|
+      size = 2 ** d
+      x = region(size, id)
+      @weights[d][x] += val
+    end
+  end
 
   def log2_ceil(num)
     result = 0
@@ -112,7 +124,7 @@ class WeightedPicker::Tree
     return if num0 < random
   end
 
-  def find(item)
+  def index(item)
     return @names.find(item)
     #raise WeightedPicker::Tree::NoEntryError
   end

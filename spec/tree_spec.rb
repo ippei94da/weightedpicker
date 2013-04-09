@@ -6,6 +6,7 @@ class WeightedPicker::Tree
   public :log2_ceil
   public :depth
   public :choose
+  attr_reader :weights
 end
 
 describe "Weightedpicker::Tree" do
@@ -18,8 +19,8 @@ describe "Weightedpicker::Tree" do
     #@tree00
   end
 
-  describe "hash" do
-    @tree00.hash.should == {"A" => 2, "B" => 1, "C" => 1}
+  describe "names_weights" do
+    @tree00.names_weights.should == {"A" => 2, "B" => 1, "C" => 1}
   end
 
   describe "pick" do
@@ -41,13 +42,23 @@ describe "Weightedpicker::Tree" do
 
   describe "weigh" do
     @tree00.weigh "A"
-    @tree00.hash.should == {"A" => 4, "B" => 1, "C" => 1}
+    @tree00.names_weights.should == {"A" => 4, "B" => 1, "C" => 1}
+    @tree00.weights.should == [
+      [6],
+      [5,1],
+      [4,1,1,0],
+    ]
     lambda{ @tree00.weigh("C")}.should raise_error(WeightedPicker::Tree::NoEntryError)
   end
 
   describe "lighten" do
     @tree00.lighten "A"
-    @tree00.hash.should == {"A" => 1, "B" => 1, "C" => 1}
+    @tree00.names_weights.should == {"A" => 1, "B" => 1, "C" => 1}
+    @tree00.weights.should == [
+      [3],
+      [2,1],
+      [1,1,1,0],
+    ]
     lambda{ @tree00.lighten("C")}.should raise_error(WeightedPicker::Tree::NoEntryError)
   end
 
