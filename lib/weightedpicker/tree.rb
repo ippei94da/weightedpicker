@@ -5,34 +5,45 @@
 #
 #
 class WeightedPicker::Tree
+
+  class NoEntryError < Exception; end
+
   #
   def initialize(data)
+    #pp "aho"
     @size = data.size #for return hash.
 
     @names = data.keys
     @weights = []
     @weights[0] = data.values
 
+    #Fill 0 to 2**n
     @size.upto ((2 ** depth) - 1) do |i|
-      weights[i] = 0
+      @weights[0][i] = 0
     end
+    #pp @weights
+    #pp depth
 
     depth.times do |i|
-      tmp = []
-      (@weights[i].size / 2).times do |j|
-        tmp << @weights[i][2*j] + @weights[i][2*j + 1]
+      #pp i
+      @weights[i+1] = []
+      num = @weights[i].size
+      (num - num / 2).times do |j|
+        #pp j
+        @weights[i+1] << @weights[i][2*j] + @weights[i][2*j + 1]
       end
-      @weights << tmp
     end
+    #pp @weights
 
     @weights.reverse!
+    #pp @weights
   end
 
   # Return internal data as a Hash.
   def names_weights
     results = {}
     @size.times do |i|
-      results[@names] = @weights[-1]
+      results[@names[i]] = @weights[-1][i]
     end
     results
   end
@@ -43,9 +54,15 @@ class WeightedPicker::Tree
     depth.times do |i|
       next_id0 = 2 * current_index
       next_id1 = 2 * current_index + 1
+      puts
+      #pp @weights[i+1][next_id0]
+      #pp @weights[i+1][next_id1]
+      #pp nums
       choise = choose( @weights[i+1][next_id0], @weights[i+1][next_id1], nums.shift)
+      #pp @weights
       current_index = 2 * current_index + choise
     end
+    #pp current_index
     return @names[current_index]
 
     #raise NoEntryError if @weights.empty?
@@ -121,11 +138,13 @@ class WeightedPicker::Tree
     sum = num0 + num1
     random ||= rand(sum) 
 
-    return if num0 < random
+    # 0, 1, 2
+    return 0 if random < num0
+    return 1
   end
 
   def index(item)
-    return @names.find(item)
+    return @names.index(item)
     #raise WeightedPicker::Tree::NoEntryError
   end
 
