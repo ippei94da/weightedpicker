@@ -1,5 +1,9 @@
 require 'yaml'
 
+class WeightedPicker; end
+
+require 'weightedpicker/tree.rb'
+
 # TODO
 #   initialize.指定したファイル内のデータが WeightedPicker 的に
 #   解釈できなければ例外。
@@ -92,8 +96,8 @@ require 'yaml'
 # ヒストリ関係はこのクラスの外に出した方が良いと判断。
 class WeightedPicker
   MAX_WEIGHT = 2**16
-  INI_WEIGHT = 2**8
-  MIN_WEIGHT = 1
+  INI_WEIGHT = 2** 8
+  MIN_WEIGHT = 2** 0
 
   class InvalidFilenameError < Exception; end
   class NoEntryError         < Exception; end
@@ -101,6 +105,12 @@ class WeightedPicker
   class InvalidWeightError   < Exception; end
 
   # Initialization.
+  def initialize(data)
+    data = sanity_data(data)
+    @tree = WeightedPicker::Tree.new(data)
+    #@weights = data
+  end
+
   # Argument 'file' indicates a strage file name for data
   # which this class manages.
   # If the 'file' does not exist, this file is used to data strage.
@@ -110,85 +120,37 @@ class WeightedPicker
   # A and B in the file and B and C in items,
   # then B and C is the items which this class manage.
   # A is discarded from record.
-  def initialize(file, items)
-    @save_file = file
-    unless File.exist? @save_file
-      File.open(@save_file, "w") {|io| YAML.dump({}, io)}
-    end
-    @weights = YAML.load_file(file)
+  def self.load_file(filename)
+    weights = YAML.load_file(filename)
+    self.new(weights)
+  end
 
-    @weights.values.each do |i|
-      #pp i
-      raise InvalidWeightError, "#{i.inspect}, not integer." unless i.is_a? Integer
-    end
-
-    merge(items)
+  def dump(io)
+    YAML.dump(@tree.names_weights, io)
   end
 
   # 乱数を利用して優先度で重み付けして要素を選び、要素を返す。
   # num is only for test. User should not use this argument.
   def pick(num = nil)
-    raise NoEntryError if @weights.empty?
-
-    sums = []
-    keys = []
-    sum = 0
-    @weights.each do |key, weight|
-      keys << key
-      sum += weight
-      sums << sum
-    end
-
-    num ||= rand(sum)
-    # find index of first excess a number
-    sums.each_with_index do |item, index|
-      return keys[index] if num < item
-    end
+    return @tree.pick
   end
 
   #重みを重くする。(優先度が上がる)
   def weigh(item)
-    raise NotExistKeyError unless @weights.has_key?(item)
-    @weights[ item ] *= 2
-    @weights[ item ] = MAX_WEIGHT if MAX_WEIGHT < @weights[ item ]
+    @tree.weigh(item)
   end
 
   #重みを軽くする。(優先度が下がる)
   def lighten(item)
-    raise NotExistKeyError unless @weights.has_key?(item)
-    #@weights.each do |key, val|
-    #  weigh(key) unless key == item
-    #end
-    if @weights[ item ] == 0
-      #@weights[ item ] = 0
-    elsif @weights[ item ] == MIN_WEIGHT
-      @weights[ item ] = MIN_WEIGHT
-    else
-      @weights[ item ] /= 2
-    end
+    @tree.lighten(item)
   end
-
-  ##管理している要素の数を返す。
-  #def size
-  # @weights.size
-  #end
-
-  ##管理している要素と重みでイテレート。
-  ##e.g. ws0.each { |item, weight| p item, weight }
-  ##item が管理しているオブジェクト、weight が重み。
-  #def each
-  # @weights.each do |item, weight|
-  #   yield(item, weight)
-  # end
-  #end
-
-  private
 
   # 引数 keys で示したものと、
   # 内部的に管理しているデータが整合しているかチェックし、
   # keys に合わせる。
   # 追加されたデータの重みは、データ内に存在する最大値と
   # 同じになる。
+  # This affects destructively.
   def merge(keys)
     new_weights = {}
     new_keys = []
@@ -202,9 +164,6 @@ class WeightedPicker
         next 
       end
 
-      new_weights[key] = 0 if new_weights[key] < MIN_WEIGHT
-      new_weights[key] = MAX_WEIGHT if MAX_WEIGHT < new_weights[key]
-
       max = @weights[key] if max < @weights[key]
     end
 
@@ -214,6 +173,18 @@ class WeightedPicker
     end
 
     @weights = new_weights
+  end
+
+  private
+
+  def sanity_data(data)
+    data.each do |key, val|
+      data[key] = 0 if val < MIN_WEIGHT
+      data[key] = MAX_WEIGHT if MAX_WEIGHT < val
+
+      raise InvalidWeightError, "#{val.inspect}, not integer." unless val.is_a? Integer
+    end
+    data
   end
 
 end
