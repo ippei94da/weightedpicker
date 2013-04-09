@@ -91,7 +91,7 @@ require 'yaml'
 # 
 # ヒストリ関係はこのクラスの外に出した方が良いと判断。
 class WeightedPicker
-  MAX_WEIGHT = 1_000_000
+  MAX_WEIGHT = 2**(16)
   MIN_WEIGHT = 1
 
   class InvalidFilenameError < Exception; end

@@ -1,8 +1,13 @@
 = weightedpicker changelog
 
-== Master (for 0.0.2)
+== Master (for 0.1.0)
   Use integer alternative to float.
   Add test for 'pick' method.
+
+  WeightedPicker::Tree is added.
+  WeightedPicker::Tree::Node is added.
+
+  Change treatment of values over MAX and under MIN.
 
 == Version 0.0.1
   bugfix.
