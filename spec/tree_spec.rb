@@ -10,10 +10,16 @@ class WeightedPicker::Tree
   attr_reader :weights
 end
 
+#puts rand(100000)
+#puts rand(100000)
+#puts rand(100000)
+#puts rand(100000)
+
 describe "Weightedpicker::Tree" do
   before do
     @tree00 = WeightedPicker::Tree.new({"A" => 2, "B" => 1, "C" => 1})
     @tree01 = WeightedPicker::Tree.new({"A" => 0})
+    @tree02 = WeightedPicker::Tree.new({})
   end
 
   it "should do in initialize" do
@@ -26,42 +32,40 @@ describe "Weightedpicker::Tree" do
   end
 
   it "should pick" do
-#    @tree00.pick([0,0]).should == "A"
-#    @tree00.pick([0,1]).should == "A"
-#    @tree00.pick([0,2]).should == "B"
-#    @tree00.pick([1,0]).should == "A"
-#    @tree00.pick([1,1]).should == "A"
-#    @tree00.pick([1,2]).should == "B"
-#    @tree00.pick([2,0]).should == "A"
-#    @tree00.pick([2,1]).should == "A"
-#    @tree00.pick([2,2]).should == "B"
-#    @tree00.pick([3,0]).should == "C"
-    @tree00.pick([3,1]).should == "C"
-    @tree00.pick([3,2]).should == "C"
+    results = {"A" => 0, "B" => 0, "C" => 0}
+    srand(0)
+    300.times do
+      results[@tree00.pick] += 1
+    end
+    #pp results #=> {"A"=>152, "B"=>76, "C"=>72}
+    results["A"].should be_within(15).of(150)
+    results["B"].should be_within( 8).of( 75)
+    results["C"].should be_within( 8).of( 75)
 
     lambda{ @tree01.pick}.should raise_error(WeightedPicker::Tree::NoEntryError)
+    lambda{ @tree02.pick}.should raise_error(WeightedPicker::Tree::NoEntryError)
   end
 
   it "should weigh item" do
     @tree00.weigh "A"
-    @tree00.names_weights.should == {"A" => 4, "B" => 1, "C" => 1}
     @tree00.weights.should == [
       [6],
       [5,1],
       [4,1,1,0],
     ]
-    lambda{ @tree00.weigh("C")}.should raise_error(WeightedPicker::Tree::NoEntryError)
+    @tree00.names_weights.should == {"A" => 4, "B" => 1, "C" => 1}
+    lambda{ @tree00.weigh("D")}.should raise_error(WeightedPicker::Tree::NoEntryError)
   end
 
   it "should lighten item" do
     @tree00.lighten "A"
-    @tree00.names_weights.should == {"A" => 1, "B" => 1, "C" => 1}
     @tree00.weights.should == [
       [3],
       [2,1],
       [1,1,1,0],
     ]
-    lambda{ @tree00.lighten("C")}.should raise_error(WeightedPicker::Tree::NoEntryError)
+    @tree00.names_weights.should == {"A" => 1, "B" => 1, "C" => 1}
+    lambda{ @tree00.lighten("D")}.should raise_error(WeightedPicker::Tree::NoEntryError)
   end
 
   it "should log2_ceil" do
@@ -75,11 +79,11 @@ describe "Weightedpicker::Tree" do
     @tree00.log2_ceil(20).should == 5
   end
 
-  it "should choose" do
-    @tree00.choose(1,2,0).should == 0
-    @tree00.choose(1,2,1).should == 1
-    @tree00.choose(1,2,2).should == 1
-  end
+  #it "should choose" do
+  #  @tree00.choose(1,2).should == 0
+  #  @tree00.choose(1,2).should == 1
+  #  @tree00.choose(1,2).should == 1
+  #end
 
   it "should get index" do
     @tree00.index("A").should == 0

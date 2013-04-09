@@ -6,11 +6,12 @@
 #
 class WeightedPicker::Tree
 
+  attr_reader :size
+
   class NoEntryError < Exception; end
 
   #
   def initialize(data)
-    #pp "aho"
     @size = data.size #for return hash.
 
     @names = data.keys
@@ -21,22 +22,16 @@ class WeightedPicker::Tree
     @size.upto ((2 ** depth) - 1) do |i|
       @weights[0][i] = 0
     end
-    #pp @weights
-    #pp depth
 
     depth.times do |i|
-      #pp i
       @weights[i+1] = []
       num = @weights[i].size
       (num - num / 2).times do |j|
-        #pp j
         @weights[i+1] << @weights[i][2*j] + @weights[i][2*j + 1]
       end
     end
-    #pp @weights
 
     @weights.reverse!
-    #pp @weights
   end
 
   # Return internal data as a Hash.
@@ -48,24 +43,19 @@ class WeightedPicker::Tree
     results
   end
 
-  #If nums is false or nil, use random.
-  def pick(nums = false)
+  def pick
+    raise NoEntryError if @weights[0][0] == 0
+
     current_index = 0
     depth.times do |i|
       next_id0 = 2 * current_index
       next_id1 = 2 * current_index + 1
       puts
-      #pp @weights[i+1][next_id0]
-      #pp @weights[i+1][next_id1]
-      #pp nums
-      choise = choose( @weights[i+1][next_id0], @weights[i+1][next_id1], nums.shift)
-      #pp @weights
+      choise = choose( @weights[i+1][next_id0], @weights[i+1][next_id1])
       current_index = 2 * current_index + choise
     end
-    #pp current_index
     return @names[current_index]
 
-    #raise NoEntryError if @weights.empty?
 
     #sums = []
     #keys = []
@@ -84,39 +74,25 @@ class WeightedPicker::Tree
   end
 
   def weigh(item)
-    #raise NotExistKeyError unless @weights.has_key?(item)
-    #@weights[ item ] *= 2
-    #@weights[ item ] = MAX_WEIGHT if MAX_WEIGHT < @weights[ item ]
+    raise NoEntryError unless @names.include?(item)
     id = index(item)
     weight = @weights[-1][id]
-    half = weight / 2
-    add_ancestors(id, half)
+    add_ancestors(id, weight)
   end
 
   def lighten(item)
+    raise NoEntryError unless @names.include?(item)
     id = index(item)
     weight = @weights[-1][id]
-    half = weight / 2
-    add_ancestors(id,  - half)
-    #raise NotExistKeyError unless @weights.has_key?(item)
-    ##@weights.each do |key, val|
-    ##  weigh(key) unless key == item
-    ##end
-    #if @weights[ item ] == 0
-    #  #@weights[ item ] = 0
-    #elsif @weights[ item ] == MIN_WEIGHT
-    #  @weights[ item ] = MIN_WEIGHT
-    #else
-    #  @weights[ item ] /= 2
-    #end
+    add_ancestors(id,  - weight / 2)
   end
 
   private
 
   def add_ancestors(id, val)
-    depth.times do |d|
-      size = 2 ** d
-      x = region(size, id)
+    (depth+1).times do |d|
+      divisor = 2 ** (depth - d)
+      x = id / divisor
       @weights[d][x] += val
     end
   end
@@ -134,12 +110,11 @@ class WeightedPicker::Tree
     log2_ceil(@size)
   end
 
-  def choose(num0, num1, random = nil)
+  def choose(num0, num1)
     sum = num0 + num1
-    random ||= rand(sum) 
 
     # 0, 1, 2
-    return 0 if random < num0
+    return 0 if rand(sum) < num0
     return 1
   end
 
