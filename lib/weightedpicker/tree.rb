@@ -76,15 +76,27 @@ class WeightedPicker::Tree
   def weigh(item)
     raise NoEntryError unless @names.include?(item)
     id = index(item)
-    weight = @weights[-1][id]
-    add_ancestors(id, weight)
+    old_weight = @weights[-1][id]
+    if (WeightedPicker::MAX_WEIGHT < old_weight * 2)
+      add_weight = WeightedPicker::MAX_WEIGHT - old_weight
+    else
+      add_weight = old_weight
+    end
+    return if add_weight == 0
+    add_ancestors(id, add_weight)
   end
 
   def lighten(item)
     raise NoEntryError unless @names.include?(item)
     id = index(item)
-    weight = @weights[-1][id]
-    add_ancestors(id,  - weight / 2)
+    old_weight = @weights[-1][id]
+    if (old_weight / 2 < WeightedPicker::MIN_WEIGHT)
+      add_weight = 0
+    else
+      add_weight = - old_weight / 2
+    end
+    return if add_weight == 0
+    add_ancestors(id, add_weight)
   end
 
   private

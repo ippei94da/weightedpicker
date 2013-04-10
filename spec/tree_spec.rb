@@ -53,6 +53,18 @@ describe "Weightedpicker::Tree" do
     lambda{ @tree00.weigh("D")}.should raise_error(WeightedPicker::Tree::NoEntryError)
   end
 
+  it "should weigh item, but be limited by MAX" do
+    tree10 = WeightedPicker::Tree.new({"A" => 60000, "B" => 1, "C" => 1})
+
+    tree10.weigh "A"
+    tree10.weights.should == [
+      [65538],
+      [65537,1],
+      [65536,1,1,0],
+    ]
+    tree10.names_weights.should == {"A" => 65536, "B" => 1, "C" => 1}
+  end
+
   it "should lighten item" do
     @tree00.lighten "A"
     @tree00.weights.should == [
@@ -63,6 +75,17 @@ describe "Weightedpicker::Tree" do
     @tree00.names_weights.should == {"A" => 1, "B" => 1, "C" => 1}
     lambda{ @tree00.lighten("D")}.should raise_error(WeightedPicker::Tree::NoEntryError)
   end
+
+  it "should lighten item, but be limited by MIN" do
+    @tree00.lighten "B"
+    @tree00.weights.should == [
+      [4],
+      [3,1],
+      [2,1,1,0],
+    ]
+    @tree00.names_weights.should == {"A" => 2, "B" => 1, "C" => 1}
+  end
+
 
   it "should add_ancestors" do
     @tree00.add_ancestors(1,10)
