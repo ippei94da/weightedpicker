@@ -16,22 +16,24 @@ op.parse!(ARGV)
 
 data_file = ARGV[0]
 data = YAML.load_file data_file
+
+new_data = {}
+if OPTIONS[:lighten]
+  data.each { |key, val| new_data[key] = val / 2 }
+  File.open(data_file, "w"){ |io| YAML.dump(new_data, io) }
+  data = new_data
+elsif OPTIONS[:weigh]
+  data.each { |key, val| new_data[key] = val * 2 }
+  File.open(data_file, "w"){ |io| YAML.dump(new_data, io) }
+  data = new_data
+end
+
 encounters = {}
 data.each do |key, weight|
   #val_log2 = (Math::log(weight)/Math::log(2.0)).to_i
   encounters[weight] ||= 0
   encounters[weight] += 1
 end
-
-new_data = {}
-if OPTIONS[:lighten]
-  data.each { |key, val| new_data[key] = val / 2 }
-  File.open(data_file, "w"){ |io| YAML.dump(new_data, io) }
-elsif OPTIONS[:weigh]
-  data.each { |key, val| new_data[key] = val * 2 }
-  File.open(data_file, "w"){ |io| YAML.dump(new_data, io) }
-end
-
 max = encounters.values.max
 0.upto(16) do |i|
   weight = 2**i
