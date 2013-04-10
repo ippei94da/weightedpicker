@@ -108,7 +108,6 @@ class WeightedPicker
   def initialize(data)
     data = sanity_data(data)
     @tree = WeightedPicker::Tree.new(data)
-    #@weights = data
   end
 
   # Argument 'file' indicates a strage file name for data
@@ -127,6 +126,10 @@ class WeightedPicker
 
   def dump(io)
     YAML.dump(@tree.names_weights, io)
+  end
+
+  def names_weights
+    @tree.names_weights
   end
 
   # 乱数を利用して優先度で重み付けして要素を選び、要素を返す。
@@ -155,16 +158,17 @@ class WeightedPicker
     new_weights = {}
     new_keys = []
     max = 0
+    data = @tree.names_weights
     keys.each do |key|
-      new_weights[key] = @weights[key]
+      new_weights[key] = data[key]
 
-      if @weights[key] == nil
+      if data[key] == nil
         #substitute max among exist values afterward
-        new_keys << key unless @weights[key]
+        new_keys << key unless data[key]
         next 
       end
 
-      max = @weights[key] if max < @weights[key]
+      max = data[key] if max < data[key]
     end
 
     max = INI_WEIGHT if max < INI_WEIGHT
@@ -172,7 +176,9 @@ class WeightedPicker
       new_weights[key] = max
     end
 
-    @weights = new_weights
+    data = new_weights
+
+    @tree = WeightedPicker::Tree.new(data)
   end
 
   private
