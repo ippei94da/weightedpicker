@@ -38,6 +38,6 @@ max = encounters.values.max
 0.upto(16) do |i|
   weight = 2**i
   num = encounters[weight] || 0
-  stars = "*" * (WIDTH * num / max)
+  stars = "*" * (WIDTH.to_f * num / max).ceil
   printf("%6d(%4d)| #{stars} \n", weight, num)
 end
