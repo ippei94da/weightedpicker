@@ -1,6 +1,7 @@
 = weightedpicker changelog
 
 == Master (for 0.1.1)
+  Add bin/weight to deal with weight yaml.
 
 == Version 0.1.0
   Use integer alternative to float.

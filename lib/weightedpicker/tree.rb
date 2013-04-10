@@ -55,22 +55,6 @@ class WeightedPicker::Tree
       current_index = 2 * current_index + choise
     end
     return @names[current_index]
-
-
-    #sums = []
-    #keys = []
-    #sum = 0
-    #@weights.each do |key, weight|
-    #  keys << key
-    #  sum += weight
-    #  sums << sum
-    #end
-
-    #num ||= rand(sum)
-    ## find index of first excess a number
-    #sums.each_with_index do |item, index|
-    #  return keys[index] if num < item
-    #end
   end
 
   def weigh(item)
