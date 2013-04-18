@@ -31,13 +31,13 @@ end
 encounters = {}
 data.each do |key, weight|
   #val_log2 = (Math::log(weight)/Math::log(2.0)).to_i
-  encounters[weight] ||= 0
-  encounters[weight] += 1
+  power = Math::log2(weight).ceil
+  encounters[power] ||= 0
+  encounters[power] += 1
 end
 max = encounters.values.max
-0.upto(16) do |i|
-  weight = 2**i
-  num = encounters[weight] || 0
+0.upto(16) do |power|
+  num = encounters[power] || 0
   stars = "*" * (WIDTH.to_f * num / max).ceil
-  printf("%6d(%4d)| #{stars} \n", weight, num)
+  printf("%6d(%4d)| #{stars} \n", 2**power, num)
 end

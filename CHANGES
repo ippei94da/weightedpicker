@@ -2,6 +2,8 @@
 
 == Master (for 0.1.1)
   Add bin/weight to deal with weight yaml.
+  Add WeightedPicker::names.
+  Add WeightedPicker::dump_histgram.
 
 == Version 0.1.0
   Use integer alternative to float.

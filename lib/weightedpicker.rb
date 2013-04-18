@@ -99,6 +99,8 @@ class WeightedPicker
   INI_WEIGHT = 2** 8
   MIN_WEIGHT = 2** 0
 
+  HISTGRAM_WIDTH = 50
+
   class InvalidFilenameError < Exception; end
   class NoEntryError         < Exception; end
   class NotExistKeyError     < Exception; end
@@ -128,8 +130,28 @@ class WeightedPicker
     YAML.dump(@tree.names_weights, io)
   end
 
+  def dump_histgram(io)
+    encounters = {}
+    names_weights.each do |key, weight|
+      #val_log2 = (Math::log(weight)/Math::log(2.0)).to_i
+      power = Math::log2(weight).ceil
+      encounters[power] ||= 0
+      encounters[power] += 1
+    end
+    max = encounters.values.max
+    0.upto(16) do |power|
+      num = encounters[power] || 0
+      stars = "*" * (HISTGRAM_WIDTH.to_f * num / max).ceil
+      io.printf("%6d(%4d)|#{stars}\n", 2**power, num)
+    end
+  end
+
   def names_weights
     @tree.names_weights
+  end
+
+  def names
+    names_weights.keys
   end
 
   # 乱数を利用して優先度で重み付けして要素を選び、要素を返す。

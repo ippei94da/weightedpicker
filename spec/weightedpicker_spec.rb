@@ -188,5 +188,51 @@ describe "Weightedpicker" do
 
   end
 
+  describe "Weightedpicker::names" do
+    it "should return an array of names." do
+      @wp01.names.should == [ "A", "B"]
+    end
+
+  end
+
+  describe "Weightedpicker::dump_histgram" do
+    it "should output histgram to io." do
+      input = {}
+      4.times do |power|
+        num = 10**power
+        num.times do |i|
+          input["#{power}_#{i}"] = num
+        end
+      end
+      #pp input
+      wp20 = WeightedPicker.new(input)
+      #pp wp20
+      io = StringIO.new
+      wp20.dump_histgram(io)
+      io.rewind
+      io.read.should == <<HERE
+     1(   1)|*
+     2(   0)|
+     4(   0)|
+     8(   0)|
+    16(  10)|*
+    32(   0)|
+    64(   0)|
+   128( 100)|*****
+   256(   0)|
+   512(   0)|
+  1024(1000)|**************************************************
+  2048(   0)|
+  4096(   0)|
+  8192(   0)|
+ 16384(   0)|
+ 32768(   0)|
+ 65536(   0)|
+HERE
+
+    end
+
+  end
+
 end
 
