@@ -5,13 +5,14 @@
 
 Gem::Specification.new do |s|
   s.name = "weightedpicker"
-  s.version = "0.1.0"
+  s.version = "0.1.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["ippei94da"]
-  s.date = "2013-04-10"
+  s.date = "2013-04-18"
   s.description = "This library enables to pick out items at the rate of their weight.\n    Weight data is storaged as a YAML file.\n    You can use this library for music player, wallpaper changer, language training.\n  "
   s.email = "ippei94da@gmail.com"
+  s.executables = ["weight"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc"
@@ -25,6 +26,7 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION",
+    "bin/weight",
     "lib/weightedpicker.rb",
     "lib/weightedpicker/tree.rb",
     "spec/a-1b256.yaml",
@@ -42,7 +44,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/ippei94da/weightedpicker"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.23"
+  s.rubygems_version = "1.8.11"
   s.summary = "Picking one item from list at the rate of its weight."
 
   if s.respond_to? :specification_version then
