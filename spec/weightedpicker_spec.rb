@@ -232,6 +232,14 @@ HERE
 
     end
 
+    describe "Weightedpicker::total_weight" do
+      it "should output histgram to io." do
+        @wp00.total_weight.should == 0
+        @wp01.total_weight.should == 384
+        @wp02.total_weight.should == 576
+      end
+    end
+
   end
 
 end

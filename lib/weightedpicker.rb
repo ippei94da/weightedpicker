@@ -203,6 +203,10 @@ class WeightedPicker
     @tree = WeightedPicker::Tree.new(data)
   end
 
+  def total_weight
+    @tree.total_weight
+  end
+
   private
 
   def sanity_data(data)

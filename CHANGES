@@ -1,6 +1,7 @@
 = weightedpicker changelog
 
 == Master (for 0.1.2)
+  Add WeightedPicker::total_weight.
 
 == Version 0.1.1 [2013-04-18] released
   Add bin/weight to deal with weight yaml.

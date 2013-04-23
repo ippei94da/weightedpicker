@@ -83,6 +83,10 @@ class WeightedPicker::Tree
     add_ancestors(id, add_weight)
   end
 
+  def total_weight
+    @weights[0][0]
+  end
+
   private
 
   def add_ancestors(id, val)

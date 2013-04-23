@@ -119,5 +119,10 @@ describe "Weightedpicker::Tree" do
     #lambda{ @tree00.find("C")}.should raise_error(WeightedPicker::Tree::NoEntryError)
   end
 
+  it "should get total weight" do
+    @tree00.total_weight.should == 4
+    @tree01.total_weight.should == 0
+    @tree02.total_weight.should == 0
+  end
 end
 
