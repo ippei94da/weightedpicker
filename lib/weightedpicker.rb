@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'yaml'
 
 class WeightedPicker; end
@@ -5,18 +6,18 @@ class WeightedPicker; end
 require 'weightedpicker/tree.rb'
 
 # TODO
-#   initialize.指定したファイル内のデータが WeightedPicker 的に
-#   解釈できなければ例外。
+#       initialize.指定したファイル内のデータが WeightedPicker 的に
+#       解釈できなければ例外。
 
 #= 概要
 # 要素群の中から、優先度に応じた重み付きランダムで、
 # どれか1つを選択する。
 # たとえば、以下の用途に使える。
 #* 音楽ファイルの再生(好みのものは多い頻度で、
-#  そうでないものは少ない頻度で)
+#    そうでないものは少ない頻度で)
 #* クイズゲームの問題選択
 #* 画像
-#  * 写真で壁紙, スライドショー的な用途。
+#    * 写真で壁紙, スライドショー的な用途。
 #
 # 対象の要素はファイルであることを前提としない。
 # 文字列であることが多いかもしれない。
@@ -95,128 +96,128 @@ require 'weightedpicker/tree.rb'
 # 
 # ヒストリ関係はこのクラスの外に出した方が良いと判断。
 class WeightedPicker
-  MAX_WEIGHT = 2**16
-  INI_WEIGHT = 2** 8
-  MIN_WEIGHT = 2** 0
+    MAX_WEIGHT = 2**16
+    INI_WEIGHT = 2** 8
+    MIN_WEIGHT = 2** 0
 
-  HISTGRAM_WIDTH = 50
+    HISTGRAM_WIDTH = 50
 
-  class InvalidFilenameError < Exception; end
-  class NoEntryError         < Exception; end
-  class NotExistKeyError     < Exception; end
-  class InvalidWeightError   < Exception; end
+    class InvalidFilenameError < Exception; end
+    class NoEntryError               < Exception; end
+    class NotExistKeyError       < Exception; end
+    class InvalidWeightError     < Exception; end
 
-  # Initialization.
-  def initialize(data)
-    data = sanity_data(data)
-    @tree = WeightedPicker::Tree.new(data)
-  end
-
-  # Argument 'file' indicates a strage file name for data
-  # which this class manages.
-  # If the 'file' does not exist, this file is used to data strage.
-  #
-  # Argument 'items' is an array of items to be managed.
-  # Not all the items in the 'file' survive.
-  # A and B in the file and B and C in items,
-  # then B and C is the items which this class manage.
-  # A is discarded from record.
-  def self.load_file(filename)
-    weights = YAML.load_file(filename)
-    self.new(weights)
-  end
-
-  def dump(io)
-    YAML.dump(@tree.names_weights, io)
-  end
-
-  def dump_histgram(io)
-    encounters = {}
-    names_weights.each do |key, weight|
-      #val_log2 = (Math::log(weight)/Math::log(2.0)).to_i
-      power = Math::log2(weight).ceil
-      encounters[power] ||= 0
-      encounters[power] += 1
-    end
-    max = encounters.values.max
-    0.upto(16) do |power|
-      num = encounters[power] || 0
-      stars = "*" * (HISTGRAM_WIDTH.to_f * num / max).ceil
-      io.printf("%6d(%4d)|#{stars}\n", 2**power, num)
-    end
-  end
-
-  def names_weights
-    @tree.names_weights
-  end
-
-  def names
-    names_weights.keys
-  end
-
-  # 乱数を利用して優先度で重み付けして要素を選び、要素を返す。
-  # num is only for test. User should not use this argument.
-  def pick
-    @tree.pick
-  end
-
-  #重みを重くする。(優先度が上がる)
-  def weigh(item)
-    @tree.weigh(item)
-  end
-
-  #重みを軽くする。(優先度が下がる)
-  def lighten(item)
-    @tree.lighten(item)
-  end
-
-  # 引数 keys で示したものと、
-  # 内部的に管理しているデータが整合しているかチェックし、
-  # keys に合わせる。
-  # 追加されたデータの重みは、データ内に存在する最大値と
-  # 同じになる。
-  # This affects destructively.
-  def merge(keys)
-    new_weights = {}
-    new_keys = []
-    max = 0
-    data = @tree.names_weights
-    keys.each do |key|
-      new_weights[key] = data[key]
-
-      if data[key] == nil
-        #substitute max among exist values afterward
-        new_keys << key unless data[key]
-        next 
-      end
-
-      max = data[key] if max < data[key]
+    # Initialization.
+    def initialize(data)
+        data = sanity_data(data)
+        @tree = WeightedPicker::Tree.new(data)
     end
 
-    max = INI_WEIGHT if max < INI_WEIGHT
-    new_keys.each do |key|
-      new_weights[key] = max
+    # Argument 'file' indicates a strage file name for data
+    # which this class manages.
+    # If the 'file' does not exist, this file is used to data strage.
+    #
+    # Argument 'items' is an array of items to be managed.
+    # Not all the items in the 'file' survive.
+    # A and B in the file and B and C in items,
+    # then B and C is the items which this class manage.
+    # A is discarded from record.
+    def self.load_file(filename)
+        weights = YAML.load_file(filename)
+        self.new(weights)
     end
 
-    data = new_weights
-
-    @tree = WeightedPicker::Tree.new(data)
-  end
-
-  def total_weight
-    @tree.total_weight
-  end
-
-  private
-
-  def sanity_data(data)
-    data.each do |key, val|
-      data[key] = 0 if val < MIN_WEIGHT
-      data[key] = MAX_WEIGHT if MAX_WEIGHT < val
-
-      raise InvalidWeightError, "#{val.inspect}, not integer." unless val.is_a? Integer
+    def dump(io)
+        YAML.dump(@tree.names_weights, io)
     end
-    data
-  end
+
+    def dump_histgram(io)
+        encounters = {}
+        names_weights.each do |key, weight|
+            #val_log2 = (Math::log(weight)/Math::log(2.0)).to_i
+            power = Math::log2(weight).ceil
+            encounters[power] ||= 0
+            encounters[power] += 1
+        end
+        max = encounters.values.max
+        0.upto(16) do |power|
+            num = encounters[power] || 0
+            stars = "*" * (HISTGRAM_WIDTH.to_f * num / max).ceil
+            io.printf("%6d(%4d)|#{stars}\n", 2**power, num)
+        end
+    end
+
+    def names_weights
+        @tree.names_weights
+    end
+
+    def names
+        names_weights.keys
+    end
+
+    # 乱数を利用して優先度で重み付けして要素を選び、要素を返す。
+    # num is only for test. User should not use this argument.
+    def pick
+        @tree.pick
+    end
+
+    #重みを重くする。(優先度が上がる)
+    def weigh(item)
+        @tree.weigh(item)
+    end
+
+    #重みを軽くする。(優先度が下がる)
+    def lighten(item)
+        @tree.lighten(item)
+    end
+
+    # 引数 keys で示したものと、
+    # 内部的に管理しているデータが整合しているかチェックし、
+    # keys に合わせる。
+    # 追加されたデータの重みは、データ内に存在する最大値と
+    # 同じになる。
+    # This affects destructively.
+    def merge(keys)
+        new_weights = {}
+        new_keys = []
+        max = 0
+        data = @tree.names_weights
+        keys.each do |key|
+            new_weights[key] = data[key]
+
+            if data[key] == nil
+                #substitute max among exist values afterward
+                new_keys << key unless data[key]
+                next 
+            end
+
+            max = data[key] if max < data[key]
+        end
+
+        max = INI_WEIGHT if max < INI_WEIGHT
+        new_keys.each do |key|
+            new_weights[key] = max
+        end
+
+        data = new_weights
+
+        @tree = WeightedPicker::Tree.new(data)
+    end
+
+    def total_weight
+        @tree.total_weight
+    end
+
+    private
+
+    def sanity_data(data)
+        data.each do |key, val|
+            data[key] = 0 if val < MIN_WEIGHT
+            data[key] = MAX_WEIGHT if MAX_WEIGHT < val
+
+            raise InvalidWeightError, "#{val.inspect}, not integer." unless val.is_a? Integer
+        end
+        data
+    end
 
 end
